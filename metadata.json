@@ -1,0 +1,6 @@
+{
+  "name": "Haryana Police Case Management System",
+  "description": "Comprehensive Case Management and Investigation Workflow System for Haryana Police covering Complaints, Preliminary Enquiry, FIR, Case Diaries (Zimni), Forensics, Chargesheet, and Court Trials.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
