@@ -988,5 +988,108 @@ export const INITIAL_CASES: PoliceCase[] = [
       certifiedCopyUrl: 'Judgment_Order_Case_512_Karnal.pdf'
     },
     updatedAt: '2026-08-14 05:00 PM'
+  },
+
+  // 7. CLOSED AT ENQUIRY (WITHOUT FIR): Dispute resolved through mutual settlement & preliminary inquiry, disposed without FIR (दफ्तर दाखिल)
+  {
+    id: 'case-2026-007',
+    complaintNumber: 'HR-CMP-2026-0318',
+    caseStage: 'CLOSED_AT_ENQUIRY',
+    dateReceived: '2026-08-10',
+    timeReceived: '11:20 AM',
+    receivingOfficerName: 'HC Manjeet Singh',
+    receivingOfficerRank: 'MHC No. 642',
+    policeStation: 'PS Civil Lines, Karnal',
+    district: 'Karnal',
+    priority: 'NORMAL',
+    crimeNature: 'CHEATING_SCAM',
+    incidentDate: '2026-08-08',
+    incidentTime: '02:00 PM',
+    incidentLocation: 'Mughal Canal Market, Karnal',
+    incidentNarrative: 'Complaint by Deepak regarding non-payment of ₹1,20,000/- for supply of auto spare parts between two local traders. Preliminary enquiry was assigned to IO to ascertain whether criminal intent existed or if it is a commercial civil dispute.',
+    complainant: {
+      name: 'Deepak',
+      fatherMotherName: 'Sh. Omprakash',
+      mobile: '+91 98961 55432',
+      email: 'deepak.autoparts@gmail.com',
+      designationOrOccupation: 'Wholesale Auto Merchant',
+      address: 'Shop No. 42, Mughal Canal Market, Karnal',
+      idProofType: 'Aadhaar Card',
+      idProofNumber: 'XXXX-XXXX-7721'
+    },
+    suspects: [
+      {
+        id: 'susp-08',
+        name: 'Harpreet Singh Sandhu',
+        fatherName: 'Sh. Gurmukh Singh',
+        mobile: '+91 94162 33410',
+        address: 'Model Town, Karnal',
+        description: 'Retail Garage Owner',
+        status: 'EXONERATED',
+        custodyType: 'NOT_ARRESTED'
+      }
+    ],
+    initialAttachments: [
+      {
+        id: 'att-071',
+        title: 'GST Invoice & Supply Delivery Challan',
+        fileType: 'DOCUMENT',
+        fileName: 'Invoice_Supply_Order_42.pdf',
+        fileSize: '950 KB',
+        uploadDate: '2026-08-10 11:25 AM',
+        uploadedBy: 'HC Manjeet Singh (MHC)'
+      }
+    ],
+    currentIO: {
+      id: 'io-vikram',
+      name: 'SI Vikram Singh',
+      rank: 'SI',
+      phone: '+91 98120 44910',
+      station: 'PS Civil Lines, Karnal'
+    },
+    ioTransferHistory: [],
+    preliminaryEnquiry: {
+      assignedToIO: {
+        id: 'io-vikram',
+        name: 'SI Vikram Singh',
+        rank: 'SI',
+        phone: '+91 98120 44910',
+        assignedDate: '2026-08-10'
+      },
+      isCognizable: false,
+      genuinenessStatus: 'CIVIL_NATURE',
+      enquirySummary: 'Dispute resolved amicably with settlement and bank payment. No cognizable offense found.',
+      recommendation: 'RECOMMEND_CLOSURE',
+      closureReason: 'Mutual compromise & full settlement executed before respectables and Market President. Entire outstanding payment disbursed via RTGS. No cognizable penal offence made out. Both parties satisfied. Recommended for Case Closure / Daftaar Dakhil (दफ्तर दाखिल) without FIR.',
+      finalReportSubmittedByIO: true,
+      finalReportSummary: 'Both parties reached an amicable settlement. Payment verified through bank UTR. Matter resolved at preliminary enquiry stage without FIR registration.',
+      writtenFinalReport: {
+        department: 'Haryana Police - PS Civil Lines, Karnal',
+        citizenName: 'Deepak',
+        citizenFatherName: 'Sh. Omprakash',
+        citizenMobile: '+91 98961 55432',
+        citizenAddress: 'Shop No. 42, Mughal Canal Market, Karnal',
+        complaintAllegations: 'Delayed payment of auto spare parts consignment.',
+        reportDate: '2026-08-15',
+        citizenSatisfaction: 'YES',
+        enquiryHeading: 'अंतिम जांच आख्या परिवाद निस्तारण / दफ्तर दाखिल (बिना FIR)',
+        noticeAndStudyNarrative: 'Issued notices u/s 35(3) BNSS, examined ledgers and bank transaction records.',
+        respondentStatements: 'Respondent produced banking transaction records showing commercial payment delay caused by third party, not intentional cheating.',
+        attachedDocumentsReference: 'RTGS UTR/HDFC/992144321, Signed Compromise Deed, Satisfaction Letter.',
+        complainantStatementNarrative: 'Complainant verified receipt of entire outstanding amount and requested complaint withdrawal without further action.',
+        ioFindingsAndAnalysis: 'No criminal breach of trust or cheating made out. Matter is purely civil/commercial and resolved amicably.',
+        concludingRecommendation: 'Case closed at Enquiry stage without lodging FIR (दफ्तर दाखिल). No criminal offense disclosed.',
+        officerSignatureName: 'SI Vikram Singh',
+        officerSignatureRank: 'Sub-Inspector',
+        officerStation: 'PS Civil Lines, Karnal',
+        officerDate: '2026-08-15'
+      }
+    },
+    enquiryTimelineZimni: [],
+    fullInvestigationZimni: [],
+    witnessStatements: [],
+    evidenceFiles: [],
+    forensicReports: [],
+    updatedAt: '2026-08-16 04:30 PM'
   }
 ];

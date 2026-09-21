@@ -30,9 +30,9 @@ export const STAGE_CONFIG: Record<CaseStage, { label: string; hindiLabel: string
     stepNumber: 4
   },
   CLOSED_AT_ENQUIRY: {
-    label: 'Closed at Enquiry',
-    hindiLabel: 'जांच उपरांत बंद',
-    color: 'text-slate-700 border-slate-300',
+    label: 'Disposed at Enquiry (No FIR)',
+    hindiLabel: 'जांच उपरांत निस्तारित / दफ्तर दाखिल (बिना FIR)',
+    color: 'text-slate-800 border-slate-300',
     bgColor: 'bg-slate-100',
     stepNumber: 4
   },

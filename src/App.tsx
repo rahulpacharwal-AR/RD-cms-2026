@@ -33,10 +33,21 @@ export default function App() {
   // Master Case State with LocalStorage Persistence
   const [cases, setCases] = useState<PoliceCase[]>(() => {
     try {
-      const saved = localStorage.getItem('haryana_police_cases_v1');
+      const saved = localStorage.getItem('haryana_police_cases_v2') || localStorage.getItem('haryana_police_cases_v1');
       if (saved) {
         const parsed = JSON.parse(saved);
-        if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          const existingIds = new Set(parsed.map((c: PoliceCase) => c.id));
+          const missingCases = INITIAL_CASES.filter((c) => !existingIds.has(c.id));
+          const merged = parsed.map((c: PoliceCase) => {
+            if (c.id === 'case-2026-007') {
+              const freshSeed = INITIAL_CASES.find((item) => item.id === 'case-2026-007');
+              return freshSeed || c;
+            }
+            return c;
+          });
+          return [...merged, ...missingCases];
+        }
       }
     } catch {
       // fallback
@@ -46,7 +57,7 @@ export default function App() {
 
   useEffect(() => {
     try {
-      localStorage.setItem('haryana_police_cases_v1', JSON.stringify(cases));
+      localStorage.setItem('haryana_police_cases_v2', JSON.stringify(cases));
     } catch {
       // fallback
     }
@@ -166,36 +177,20 @@ export default function App() {
     return cases.find((c) => c.id === dossierCaseId) || null;
   }, [dossierCaseId, cases]);
 
-  // Role-isolated Base Cases for KPI and metrics
-  const roleFilteredCases = useMemo(() => {
+  // Role & Jurisdiction-isolated Scoped Cases for KPI metrics and registry
+  const scopedCases = useMemo(() => {
     return cases.filter((c) => {
+      // 1. Strict Role Isolation:
       if (currentRole === 'IO') {
-        return c.currentIO.name === currentOfficer.name ||
-               c.currentIO.id === currentOfficer.id ||
-               c.preliminaryEnquiry?.assignedToIO?.name === currentOfficer.name ||
-               c.preliminaryEnquiry?.assignedToIO?.id === currentOfficer.id;
-      }
-      if (currentRole === 'SHO') {
-        const allowedDistricts = currentOfficer.jurisdictionDistricts ||
-          (currentOfficer.name.includes('Rajesh') ? ['Karnal', 'Panipat'] : ['Faridabad', 'Gurugram']);
-        return allowedDistricts.includes(c.district);
-      }
-      return true;
-    });
-  }, [cases, currentRole, currentOfficer]);
-
-  // Filtered Cases for Main Registry View
-  const filteredCases = useMemo(() => {
-    return cases.filter((c) => {
-      // Role & Officer Strict Isolation:
-      if (currentRole === 'IO') {
-        const isMyOfficer = c.currentIO.name === currentOfficer.name || 
-                            c.currentIO.id === currentOfficer.id ||
-                            c.preliminaryEnquiry?.assignedToIO?.name === currentOfficer.name ||
-                            c.preliminaryEnquiry?.assignedToIO?.id === currentOfficer.id;
+        const isMyOfficer =
+          c.currentIO.name === currentOfficer.name ||
+          c.currentIO.id === currentOfficer.id ||
+          c.preliminaryEnquiry?.assignedToIO?.name === currentOfficer.name ||
+          c.preliminaryEnquiry?.assignedToIO?.id === currentOfficer.id;
         if (!isMyOfficer) return false;
       } else if (currentRole === 'SHO') {
-        const allowedDistricts = currentOfficer.jurisdictionDistricts ||
+        const allowedDistricts =
+          currentOfficer.jurisdictionDistricts ||
           (currentOfficer.name.includes('Rajesh') ? ['Karnal', 'Panipat'] : ['Faridabad', 'Gurugram']);
         if (!allowedDistricts.includes(c.district)) {
           return false;
@@ -209,20 +204,48 @@ export default function App() {
           } else {
             const targetIO = regionIOs.find((io) => io.id === selectedShoIOFilter);
             const targetName = targetIO?.name || selectedShoIOFilter;
-            const matchesIO = c.currentIO.id === selectedShoIOFilter ||
-                              c.currentIO.name === targetName ||
-                              c.preliminaryEnquiry?.assignedToIO?.id === selectedShoIOFilter ||
-                              c.preliminaryEnquiry?.assignedToIO?.name === targetName;
+            const matchesIO =
+              c.currentIO.id === selectedShoIOFilter ||
+              c.currentIO.name === targetName ||
+              c.preliminaryEnquiry?.assignedToIO?.id === selectedShoIOFilter ||
+              c.preliminaryEnquiry?.assignedToIO?.name === targetName;
             if (!matchesIO) return false;
           }
         }
+      } else if (currentRole === 'SP') {
+        const allowedDistricts =
+          currentOfficer.jurisdictionDistricts || ['Karnal', 'Panipat', 'Gurugram', 'Faridabad'];
+        if (!allowedDistricts.includes(c.district)) {
+          return false;
+        }
       }
 
-      // Station filter
+      // 2. Station filter
       if (selectedStation !== 'ALL' && c.policeStation !== selectedStation) {
         return false;
       }
 
+      return true;
+    });
+  }, [cases, currentRole, currentOfficer, selectedStation, selectedShoIOFilter, regionIOs]);
+
+  // KPI Metrics Calculations directly based on scopedCases
+  const metrics = useMemo(() => {
+    const total = scopedCases.length;
+    const newComplaints = scopedCases.filter((c) => c.caseStage === 'COMPLAINT_RECEIVED' || c.caseStage === 'IO_ASSIGNED').length;
+    const preliminaryEnquiry = scopedCases.filter((c) => c.caseStage === 'PRELIMINARY_ENQUIRY' || c.caseStage === 'ENQUIRY_REPORT_SUBMITTED').length;
+    const activeFIRs = scopedCases.filter((c) => c.caseStage === 'FIR_REGISTERED' || c.caseStage === 'UNDER_INVESTIGATION').length;
+    const custodyCritical = scopedCases.filter((c) => !!c.statutoryDeadline).length;
+    const pendingChargesheets = scopedCases.filter((c) => c.caseStage === 'CHARGESHEET_PREPARED' || c.caseStage === 'CHARGESHEET_SUBMITTED_TO_COURT').length;
+    const underTrial = scopedCases.filter((c) => c.caseStage === 'UNDER_TRIAL').length;
+    const disposed = scopedCases.filter((c) => c.caseStage === 'DISPOSED' || c.caseStage === 'CLOSED_AT_ENQUIRY').length;
+
+    return { total, newComplaints, preliminaryEnquiry, activeFIRs, custodyCritical, pendingChargesheets, underTrial, disposed };
+  }, [scopedCases]);
+
+  // Filtered Cases for Main Registry View (Stage tab, Priority, and Search Query)
+  const filteredCases = useMemo(() => {
+    return scopedCases.filter((c) => {
       // Priority filter
       if (selectedPriorityFilter !== 'ALL' && c.priority !== selectedPriorityFilter) {
         return false;
@@ -249,7 +272,7 @@ export default function App() {
       if (searchQuery.trim()) {
         const query = searchQuery.toLowerCase().trim();
         const matchesNumber = c.complaintNumber.toLowerCase().includes(query);
-        const matchesFIR = c.firDetails?.firNumber.toLowerCase().includes(query);
+        const matchesFIR = c.firDetails?.firNumber?.toLowerCase().includes(query);
         const matchesComplainant = c.complainant.name.toLowerCase().includes(query);
         const matchesMobile = c.complainant.mobile.includes(query);
         const matchesIO = c.currentIO.name.toLowerCase().includes(query);
@@ -263,20 +286,7 @@ export default function App() {
 
       return true;
     });
-  }, [cases, selectedStation, selectedStageTab, selectedPriorityFilter, searchQuery, currentRole, currentOfficer]);
-
-  // KPI Metrics Calculations based on role-filtered cases
-  const metrics = useMemo(() => {
-    const total = roleFilteredCases.length;
-    const pendingEnquiry = roleFilteredCases.filter((c) => c.caseStage === 'COMPLAINT_RECEIVED' || c.caseStage === 'PRELIMINARY_ENQUIRY').length;
-    const activeFIRs = roleFilteredCases.filter((c) => c.caseStage === 'FIR_REGISTERED' || c.caseStage === 'UNDER_INVESTIGATION').length;
-    const custodyCritical = roleFilteredCases.filter((c) => c.statutoryDeadline?.alertLevel === 'CRITICAL' || c.statutoryDeadline?.alertLevel === 'WARNING').length;
-    const pendingChargesheets = roleFilteredCases.filter((c) => c.caseStage === 'CHARGESHEET_PREPARED').length;
-    const underTrial = roleFilteredCases.filter((c) => c.caseStage === 'UNDER_TRIAL').length;
-    const disposed = roleFilteredCases.filter((c) => c.caseStage === 'DISPOSED' || c.caseStage === 'CLOSED_AT_ENQUIRY').length;
-
-    return { total, pendingEnquiry, activeFIRs, custodyCritical, pendingChargesheets, underTrial, disposed };
-  }, [roleFilteredCases]);
+  }, [scopedCases, selectedStageTab, selectedPriorityFilter, searchQuery]);
 
   // Filter complaints specifically pending verification and IO assignment for SHO
   const shoPendingComplaints = useMemo(() => {
@@ -1887,10 +1897,26 @@ export default function App() {
           >
             <span className="text-[10px] font-bold uppercase tracking-wider text-blue-700 block">Complaints Intake</span>
             <div className="flex items-baseline justify-between mt-1">
-              <span className="text-xl sm:text-2xl font-black text-blue-900">{metrics.pendingEnquiry}</span>
+              <span className="text-xl sm:text-2xl font-black text-blue-900">{metrics.newComplaints}</span>
               <UserCheck className="h-4 w-4 text-blue-600" />
             </div>
-            <span className="text-[10px] text-blue-700">Awaiting IO / Enquiry</span>
+            <span className="text-[10px] text-blue-700">Fresh / Awaiting IO</span>
+          </button>
+
+          <button
+            onClick={() => setSelectedStageTab('ENQUIRY')}
+            className={`p-3 rounded-xl border text-left transition-all cursor-pointer ${
+              selectedStageTab === 'ENQUIRY'
+                ? 'bg-amber-50 border-amber-600 shadow-md ring-2 ring-amber-600/10'
+                : 'bg-white/80 border-slate-200/80 hover:bg-white hover:border-slate-300'
+            }`}
+          >
+            <span className="text-[10px] font-bold uppercase tracking-wider text-amber-700 block">Prelim Enquiry</span>
+            <div className="flex items-baseline justify-between mt-1">
+              <span className="text-xl sm:text-2xl font-black text-amber-900">{metrics.preliminaryEnquiry}</span>
+              <FileText className="h-4 w-4 text-amber-600" />
+            </div>
+            <span className="text-[10px] text-amber-700">Inquiry ongoing</span>
           </button>
 
           <button
@@ -1907,25 +1933,6 @@ export default function App() {
               <BookOpen className="h-4 w-4 text-emerald-600" />
             </div>
             <span className="text-[10px] text-emerald-700">Daily Zimni ongoing</span>
-          </button>
-
-          <button
-            onClick={() => setSelectedStageTab('CUSTODY_ALERTS')}
-            className={`p-3 rounded-xl border text-left transition-all cursor-pointer ${
-              selectedStageTab === 'CUSTODY_ALERTS'
-                ? 'bg-red-50 border-red-600 shadow-md ring-2 ring-red-600/10'
-                : 'bg-white/80 border-slate-200/80 hover:bg-white hover:border-slate-300'
-            }`}
-          >
-            <div className="flex items-center gap-1 text-[10px] font-bold uppercase tracking-wider text-red-700">
-              <Clock className="h-3 w-3 text-red-600 animate-pulse" />
-              <span>60/90d Watch</span>
-            </div>
-            <div className="flex items-baseline justify-between mt-1">
-              <span className="text-xl sm:text-2xl font-black text-red-900">{metrics.custodyCritical}</span>
-              <Lock className="h-4 w-4 text-red-600" />
-            </div>
-            <span className="text-[10px] text-red-700 font-semibold">Statutory default alert</span>
           </button>
 
           <button
@@ -1985,15 +1992,12 @@ export default function App() {
           <div className="p-4 sm:p-5 border-b border-slate-200 flex flex-wrap items-center justify-between gap-4">
             
             <div className="flex items-center gap-3">
-              <div className="h-9 w-9 rounded-xl bg-[#0c1a30] text-amber-400 flex items-center justify-center font-black shadow-inner">
+              <div className="h-9 w-9 rounded-xl bg-[#0c1a30] text-amber-400 flex items-center justify-center font-black shadow-inner text-xs">
                 HP
               </div>
               <div>
-                <h2 className="text-base sm:text-lg font-bold text-slate-900 flex items-center gap-2">
-                  Crime & Criminal Tracking Network Docket (CCTNS Haryana)
-                </h2>
-                <p className="text-xs text-slate-500">
-                  Showing {filteredCases.length} case files • Role: <strong>{currentRole}</strong> • Station: {selectedStation}
+                <p className="text-xs text-slate-600 font-medium">
+                  Showing {filteredCases.length} case files • Role: <strong className="text-slate-900">{currentRole}</strong> • Station: <span className="text-slate-800 font-semibold">{selectedStation}</span>
                 </p>
               </div>
             </div>
@@ -2042,14 +2046,6 @@ export default function App() {
                 <option value="URGENT">Urgent Investigation</option>
                 <option value="NORMAL">Normal Priority</option>
               </select>
-
-              {/* Citizen Complaint Intake Button */}
-              <button
-                onClick={() => setIsNewComplaintOpen(true)}
-                className="px-4 py-2 bg-amber-600 hover:bg-amber-700 text-white rounded-lg text-xs font-bold shadow-sm transition-all flex items-center gap-1.5 cursor-pointer"
-              >
-                <Plus className="h-4 w-4" /> New Complaint Registration
-              </button>
             </div>
 
           </div>
@@ -2062,7 +2058,7 @@ export default function App() {
                 selectedStageTab === 'ALL' ? 'bg-[#0c1a30] text-white shadow-xs' : 'text-slate-600 hover:bg-slate-200'
               }`}
             >
-              All Stages ({cases.length})
+              All Stages ({metrics.total})
             </button>
             <button
               onClick={() => setSelectedStageTab('COMPLAINTS')}
@@ -2070,7 +2066,7 @@ export default function App() {
                 selectedStageTab === 'COMPLAINTS' ? 'bg-blue-700 text-white shadow-xs' : 'text-slate-600 hover:bg-slate-200'
               }`}
             >
-              1. New Complaints ({cases.filter((c) => c.caseStage === 'COMPLAINT_RECEIVED' || c.caseStage === 'IO_ASSIGNED').length})
+              1. New Complaints ({metrics.newComplaints})
             </button>
             <button
               onClick={() => setSelectedStageTab('ENQUIRY')}
@@ -2078,7 +2074,7 @@ export default function App() {
                 selectedStageTab === 'ENQUIRY' ? 'bg-amber-700 text-white shadow-xs' : 'text-slate-600 hover:bg-slate-200'
               }`}
             >
-              2. Preliminary Enquiry ({cases.filter((c) => c.caseStage === 'PRELIMINARY_ENQUIRY' || c.caseStage === 'ENQUIRY_REPORT_SUBMITTED').length})
+              2. Preliminary Enquiry ({metrics.preliminaryEnquiry})
             </button>
             <button
               onClick={() => setSelectedStageTab('INVESTIGATION')}
@@ -2086,7 +2082,7 @@ export default function App() {
                 selectedStageTab === 'INVESTIGATION' ? 'bg-emerald-700 text-white shadow-xs' : 'text-slate-600 hover:bg-slate-200'
               }`}
             >
-              3. FIR & Zimni Investigation ({cases.filter((c) => c.caseStage === 'FIR_REGISTERED' || c.caseStage === 'UNDER_INVESTIGATION').length})
+              3. FIR & Zimni Investigation ({metrics.activeFIRs})
             </button>
             <button
               onClick={() => setSelectedStageTab('CUSTODY_ALERTS')}
@@ -2094,7 +2090,7 @@ export default function App() {
                 selectedStageTab === 'CUSTODY_ALERTS' ? 'bg-red-700 text-white shadow-xs' : 'text-slate-600 hover:bg-slate-200'
               }`}
             >
-              4. 60/90 Days Custody Alert ({cases.filter((c) => c.statutoryDeadline).length})
+              4. 60/90 Days Custody Alert ({metrics.custodyCritical})
             </button>
             <button
               onClick={() => setSelectedStageTab('CHARGESHEET')}
@@ -2102,7 +2098,7 @@ export default function App() {
                 selectedStageTab === 'CHARGESHEET' ? 'bg-purple-700 text-white shadow-xs' : 'text-slate-600 hover:bg-slate-200'
               }`}
             >
-              5. Chargesheet / Challan ({cases.filter((c) => c.caseStage === 'CHARGESHEET_PREPARED' || c.caseStage === 'CHARGESHEET_SUBMITTED_TO_COURT').length})
+              5. Chargesheet / Challan ({metrics.pendingChargesheets})
             </button>
             <button
               onClick={() => setSelectedStageTab('TRIAL')}
@@ -2110,7 +2106,7 @@ export default function App() {
                 selectedStageTab === 'TRIAL' ? 'bg-amber-800 text-white shadow-xs' : 'text-slate-600 hover:bg-slate-200'
               }`}
             >
-              6. Court Under Trial ({cases.filter((c) => c.caseStage === 'UNDER_TRIAL').length})
+              6. Court Under Trial ({metrics.underTrial})
             </button>
             <button
               onClick={() => setSelectedStageTab('DISPOSED')}
@@ -2118,7 +2114,7 @@ export default function App() {
                 selectedStageTab === 'DISPOSED' ? 'bg-emerald-800 text-white shadow-xs' : 'text-slate-600 hover:bg-slate-200'
               }`}
             >
-              7. Disposed Cases ({cases.filter((c) => c.caseStage === 'DISPOSED' || c.caseStage === 'CLOSED_AT_ENQUIRY').length})
+              7. Disposed Cases ({metrics.disposed})
             </button>
           </div>
 
@@ -2179,6 +2175,14 @@ export default function App() {
                           {stage.label} ({stage.hindiLabel})
                         </span>
 
+                        {/* Explicit Badge for Cases Disposed/Closed after enquiry without FIR */}
+                        {(c.caseStage === 'CLOSED_AT_ENQUIRY' || (c.caseStage === 'DISPOSED' && !c.firDetails)) && (
+                          <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-slate-100 text-slate-800 border border-slate-300 flex items-center gap-1 shadow-2xs">
+                            <CheckCircle2 className="h-3 w-3 text-emerald-600" />
+                            Disposed Without FIR (दफ्तर दाखिल / समझौता)
+                          </span>
+                        )}
+
                         <span className={`text-[10px] font-bold px-2 py-0.5 rounded border ${priority.badge}`}>
                           {priority.label}
                         </span>
@@ -2221,6 +2225,35 @@ export default function App() {
                         <p className="text-xs text-slate-600 line-clamp-2 mt-0.5 leading-relaxed font-serif">
                           "{c.incidentNarrative}"
                         </p>
+
+                        {/* Explicit Outcome Callout for Cases Disposed/Closed after enquiry without FIR */}
+                        {(c.caseStage === 'CLOSED_AT_ENQUIRY' || (c.caseStage === 'DISPOSED' && !c.firDetails)) && (
+                          <div className="mt-2 p-2.5 rounded-xl bg-slate-100/95 border border-slate-200 text-xs text-slate-800 flex items-start gap-2 shadow-2xs">
+                            <FileCheck2 className="h-4 w-4 text-emerald-700 shrink-0 mt-0.5" />
+                            <div>
+                              <strong className="text-slate-950 font-bold">Enquiry Closure Outcome (दफ्तर दाखिल / Without FIR):</strong>{' '}
+                              <span className="text-slate-700">
+                                {c.preliminaryEnquiry?.closureReason ||
+                                  c.preliminaryEnquiry?.writtenFinalReport?.concludingRecommendation ||
+                                  c.preliminaryEnquiry?.finalReportSummary ||
+                                  'Matter resolved amicably / No cognizable offense made out. Closed at Preliminary Enquiry stage without lodging FIR.'}
+                              </span>
+                            </div>
+                          </div>
+                        )}
+
+                        {/* Outcome Callout for Cases Disposed after Court Trial */}
+                        {c.courtTrial?.finalOutcome && (
+                          <div className="mt-2 p-2.5 rounded-xl bg-emerald-50/90 border border-emerald-200 text-xs text-emerald-950 flex items-start gap-2 shadow-2xs">
+                            <Scale className="h-4 w-4 text-emerald-700 shrink-0 mt-0.5" />
+                            <div>
+                              <strong className="text-emerald-950 font-bold">Court Trial Outcome ({c.courtTrial.finalOutcome}):</strong>{' '}
+                              <span className="text-emerald-900">
+                                {c.courtTrial.punishmentAwarded || 'Judicial trial concluded with final court judgment order.'}
+                              </span>
+                            </div>
+                          </div>
+                        )}
                       </div>
 
                       {/* Meta footer row */}

@@ -154,7 +154,7 @@ export const Header: React.FC<HeaderProps> = ({
 
           {/* Actions & Role Switcher */}
           <div className="flex items-center gap-2.5">
-            {/* New Complaint Intake Button */}
+            {/* Top Register Complaint Button */}
             <button
               onClick={onOpenNewComplaintModal}
               className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-lg bg-gradient-to-r from-amber-600 to-amber-500 hover:from-amber-500 hover:to-amber-400 text-slate-950 font-bold text-xs sm:text-sm shadow-md hover:shadow-amber-500/20 transition-all transform active:scale-95 cursor-pointer"
