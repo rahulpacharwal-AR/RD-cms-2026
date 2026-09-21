@@ -59,26 +59,18 @@ export const POLICE_STATIONS: PoliceStationInfo[] = [
 ];
 
 export const POLICE_OFFICERS: PoliceOfficer[] = [
-  // IOs
+  // IOs: Kuldeep, Priyanka, Ramesh, Vikram
   {
-    id: 'io-vikram',
-    name: 'SI Vikram Singh',
-    badgeNumber: 'HP-SI-4491',
-    rank: 'SI',
-    role: 'IO',
-    phone: '+91 98120 44910',
-    station: 'PS Civil Lines, Karnal',
-    activeCasesCount: 4
-  },
-  {
-    id: 'io-ramesh',
-    name: 'ASI Ramesh Kumar',
-    badgeNumber: 'HP-ASI-8120',
+    id: 'io-kuldeep',
+    name: 'ASI Kuldeep Chahal',
+    badgeNumber: 'HP-ASI-3349',
     rank: 'ASI',
     role: 'IO',
-    phone: '+91 94160 88214',
-    station: 'PS City, Panipat',
-    activeCasesCount: 5
+    phone: '+91 98132 99401',
+    station: 'PS Cyber Crime, Faridabad',
+    activeCasesCount: 3,
+    jurisdictionDistricts: ['Faridabad'],
+    jurisdictionLabel: 'Faridabad (फरीदाबाद)'
   },
   {
     id: 'io-priyanka',
@@ -88,19 +80,35 @@ export const POLICE_OFFICERS: PoliceOfficer[] = [
     role: 'IO',
     phone: '+91 97290 11982',
     station: 'PS Sector 29, Gurugram',
-    activeCasesCount: 3
+    activeCasesCount: 3,
+    jurisdictionDistricts: ['Gurugram'],
+    jurisdictionLabel: 'Gurugram (गुरुग्राम)'
   },
   {
-    id: 'io-kuldeep',
-    name: 'ASI Kuldeep Chahal',
-    badgeNumber: 'HP-ASI-3349',
+    id: 'io-ramesh',
+    name: 'ASI Ramesh Kumar',
+    badgeNumber: 'HP-ASI-8120',
     rank: 'ASI',
     role: 'IO',
-    phone: '+91 98132 99401',
-    station: 'PS Cyber Crime, Faridabad',
-    activeCasesCount: 3
+    phone: '+91 94160 88214',
+    station: 'PS City, Panipat',
+    activeCasesCount: 5,
+    jurisdictionDistricts: ['Panipat'],
+    jurisdictionLabel: 'Panipat (पानीपत)'
   },
-  // SHOs
+  {
+    id: 'io-vikram',
+    name: 'SI Vikram Singh',
+    badgeNumber: 'HP-SI-4491',
+    rank: 'SI',
+    role: 'IO',
+    phone: '+91 98120 44910',
+    station: 'PS Civil Lines, Karnal',
+    activeCasesCount: 4,
+    jurisdictionDistricts: ['Karnal'],
+    jurisdictionLabel: 'Karnal (करनाल)'
+  },
+  // SHOs: Inspector Rajesh Hooda (Karnal, Panipat) and SI Ravikant (Faridabad, Gurugram)
   {
     id: 'sho-rajesh',
     name: 'Inspector Rajesh Hooda',
@@ -108,18 +116,22 @@ export const POLICE_OFFICERS: PoliceOfficer[] = [
     rank: 'INSPECTOR',
     role: 'SHO',
     phone: '+91 94161 22345',
-    station: 'PS Civil Lines, Karnal',
-    activeCasesCount: 14
+    station: 'PS Civil Lines, Karnal (Karnal & Panipat Range)',
+    activeCasesCount: 14,
+    jurisdictionDistricts: ['Karnal', 'Panipat'],
+    jurisdictionLabel: 'Karnal & Panipat (करनाल व पानीपत)'
   },
   {
-    id: 'sho-sanjeev',
-    name: 'Inspector Sanjeev Malik',
-    badgeNumber: 'HP-INS-1188',
-    rank: 'INSPECTOR',
+    id: 'sho-ravikant',
+    name: 'SI Ravikant',
+    badgeNumber: 'HP-SI-2089',
+    rank: 'SI',
     role: 'SHO',
-    phone: '+91 94163 77890',
-    station: 'PS City, Panipat',
-    activeCasesCount: 18
+    phone: '+91 94162 55431',
+    station: 'PS Sector 29, Gurugram (Faridabad & Gurugram Range)',
+    activeCasesCount: 12,
+    jurisdictionDistricts: ['Faridabad', 'Gurugram'],
+    jurisdictionLabel: 'Faridabad & Gurugram (फरीदाबाद व गुरुग्राम)'
   },
   // SP / District Head
   {
@@ -130,7 +142,9 @@ export const POLICE_OFFICERS: PoliceOfficer[] = [
     role: 'SP',
     phone: '+91 184 2267000',
     station: 'District Police Headquarters, Karnal',
-    activeCasesCount: 45
+    activeCasesCount: 45,
+    jurisdictionDistricts: ['Karnal', 'Panipat', 'Gurugram', 'Faridabad'],
+    jurisdictionLabel: 'All Districts (समस्त ज़िला परिक्षेत्र)'
   },
   // Admin
   {
@@ -141,12 +155,14 @@ export const POLICE_OFFICERS: PoliceOfficer[] = [
     role: 'ADMIN',
     phone: '+91 172 2587500',
     station: 'State Police Headquarters, Panchkula',
-    activeCasesCount: 0
+    activeCasesCount: 0,
+    jurisdictionDistricts: ['Karnal', 'Panipat', 'Gurugram', 'Faridabad'],
+    jurisdictionLabel: 'Statewide (राज्य स्तर)'
   }
 ];
 
 export const DEFAULT_OFFICERS: Record<UserRole, PoliceOfficer> = {
-  IO: POLICE_OFFICERS[0], // SI Vikram Singh
+  IO: POLICE_OFFICERS[3], // SI Vikram Singh
   SHO: POLICE_OFFICERS[4], // Inspector Rajesh Hooda
   SP: POLICE_OFFICERS[6], // Sh. Surender Phogat, IPS
   ADMIN: POLICE_OFFICERS[7] // HQ IT Cell Administrator

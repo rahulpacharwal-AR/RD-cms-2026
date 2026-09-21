@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { PoliceCase, ForensicReport } from '../types';
-import { X, Microscope, FileText, CheckCircle2 } from 'lucide-react';
+import { X, Microscope, FileText, CheckCircle2, Maximize2, Minimize2 } from 'lucide-react';
 
 interface ForensicReportModalProps {
   isOpen: boolean;
@@ -15,14 +15,15 @@ export const ForensicReportModal: React.FC<ForensicReportModalProps> = ({
   caseItem,
   onAddForensic
 }) => {
-  if (!isOpen || !caseItem) return null;
-
   const [reportType, setReportType] = useState<ForensicReport['reportType']>('DIGITAL_FORENSICS');
   const [title, setTitle] = useState('');
   const [laboratoryName, setLaboratoryName] = useState('Forensic Science Laboratory (FSL), Madhuban, Karnal');
   const [status, setStatus] = useState<ForensicReport['status']>('REPORT_RECEIVED');
   const [findingsSummary, setFindingsSummary] = useState('');
   const [officerNotes, setOfficerNotes] = useState('');
+  const [isMaximized, setIsMaximized] = useState(false);
+
+  if (!isOpen || !caseItem) return null;
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -48,11 +49,13 @@ export const ForensicReportModal: React.FC<ForensicReportModalProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/70 backdrop-blur-sm animate-in fade-in duration-150">
-      <div className="bg-white rounded-2xl shadow-2xl max-w-lg w-full border border-slate-200 overflow-hidden">
+    <div className={`fixed inset-0 z-50 flex items-center justify-center ${isMaximized ? 'p-0' : 'p-4'} bg-slate-950/70 backdrop-blur-sm animate-in fade-in duration-150`}>
+      <div className={`bg-white shadow-2xl border border-slate-200 overflow-hidden flex flex-col transition-all duration-200 ${
+        isMaximized ? 'w-full h-full max-w-none max-h-none rounded-none my-0' : 'max-w-lg w-full rounded-2xl max-h-[92vh]'
+      }`}>
         
         {/* Header */}
-        <div className="bg-[#0c1a30] text-white px-6 py-4 flex items-center justify-between border-b border-slate-700">
+        <div className="bg-[#0c1a30] text-white px-6 py-4 flex items-center justify-between border-b border-slate-700 shrink-0">
           <div className="flex items-center gap-3">
             <div className="h-9 w-9 rounded-full bg-purple-500/20 border border-purple-400/40 flex items-center justify-center text-purple-400">
               <Microscope className="h-5 w-5" />
@@ -66,16 +69,28 @@ export const ForensicReportModal: React.FC<ForensicReportModalProps> = ({
               </p>
             </div>
           </div>
-          <button
-            onClick={onClose}
-            className="p-1 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition-colors"
-          >
-            <X className="h-5 w-5" />
-          </button>
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={() => setIsMaximized(!isMaximized)}
+              className="p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition-colors cursor-pointer"
+              title={isMaximized ? "Restore Size (सामान्य आकार)" : "Maximize Screen (पूर्ण स्क्रीन / बड़ा करें)"}
+            >
+              {isMaximized ? <Minimize2 className="h-4.5 w-4.5" /> : <Maximize2 className="h-4.5 w-4.5" />}
+            </button>
+            <button
+              type="button"
+              onClick={onClose}
+              className="p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition-colors cursor-pointer"
+              title="Close"
+            >
+              <X className="h-5 w-5" />
+            </button>
+          </div>
         </div>
 
         {/* Form */}
-        <form onSubmit={handleSubmit} className="p-6 space-y-4 bg-slate-50/50">
+        <form onSubmit={handleSubmit} className="p-6 space-y-4 bg-slate-50/50 overflow-y-auto flex-1">
           
           <div className="grid grid-cols-2 gap-3">
             <div>

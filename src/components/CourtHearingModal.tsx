@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { PoliceCase, CourtTrialRecord, CourtHearing } from '../types';
-import { X, Scale, Calendar, CheckCircle2, Gavel } from 'lucide-react';
+import { X, Scale, Calendar, CheckCircle2, Gavel, Maximize2, Minimize2 } from 'lucide-react';
 
 interface CourtHearingModalProps {
   isOpen: boolean;
@@ -15,9 +15,7 @@ export const CourtHearingModal: React.FC<CourtHearingModalProps> = ({
   caseItem,
   onUpdateCourtTrial
 }) => {
-  if (!isOpen || !caseItem) return null;
-
-  const existingTrial = caseItem.courtTrial;
+  const existingTrial = caseItem?.courtTrial;
 
   const [courtCaseNumber, setCourtCaseNumber] = useState(
     existingTrial?.courtCaseNumber || `CIS-CHI-${Math.floor(100 + Math.random() * 900)}-${new Date().getFullYear()}`
@@ -26,12 +24,13 @@ export const CourtHearingModal: React.FC<CourtHearingModalProps> = ({
     existingTrial?.cnrNumber || `HRKN01-${Math.floor(100000 + Math.random() * 900000)}-${new Date().getFullYear()}`
   );
   const [courtName, setCourtName] = useState(
-    existingTrial?.courtName || `Court of Chief Judicial Magistrate (CJM), ${caseItem.district}`
+    existingTrial?.courtName || `Court of Chief Judicial Magistrate (CJM), ${caseItem?.district || 'Karnal'}`
   );
   const [presidingJudge, setPresidingJudge] = useState(existingTrial?.presidingJudge || 'Sh. Sanjeev Kumar, CJM');
   const [currentTrialStage, setCurrentTrialStage] = useState<CourtTrialRecord['currentTrialStage']>(
     existingTrial?.currentTrialStage || 'PROSECUTION_EVIDENCE'
   );
+  const [isMaximized, setIsMaximized] = useState(false);
 
   // New hearing addition
   const [hearingDate, setHearingDate] = useState(new Date().toISOString().split('T')[0]);
@@ -48,6 +47,8 @@ export const CourtHearingModal: React.FC<CourtHearingModalProps> = ({
   const [finalOutcome, setFinalOutcome] = useState<CourtTrialRecord['finalOutcome']>(existingTrial?.finalOutcome);
   const [punishmentAwarded, setPunishmentAwarded] = useState(existingTrial?.punishmentAwarded || '');
   const [fineAmount, setFineAmount] = useState(existingTrial?.fineAmount || 0);
+
+  if (!isOpen || !caseItem) return null;
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -87,8 +88,10 @@ export const CourtHearingModal: React.FC<CourtHearingModalProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/70 backdrop-blur-sm overflow-y-auto animate-in fade-in duration-150">
-      <div className="bg-white rounded-2xl shadow-2xl max-w-2xl w-full border border-slate-200 overflow-hidden my-6 max-h-[92vh] flex flex-col">
+    <div className={`fixed inset-0 z-50 flex items-center justify-center ${isMaximized ? 'p-0' : 'p-4'} bg-slate-950/70 backdrop-blur-sm overflow-y-auto animate-in fade-in duration-150`}>
+      <div className={`bg-white shadow-2xl border border-slate-200 overflow-hidden flex flex-col transition-all duration-200 ${
+        isMaximized ? 'w-full h-full max-w-none max-h-none rounded-none my-0' : 'max-w-2xl w-full rounded-2xl my-6 max-h-[92vh]'
+      }`}>
         
         {/* Header */}
         <div className="bg-[#0c1a30] text-white px-6 py-4 flex items-center justify-between border-b border-slate-700 shrink-0">
@@ -105,12 +108,24 @@ export const CourtHearingModal: React.FC<CourtHearingModalProps> = ({
               </p>
             </div>
           </div>
-          <button
-            onClick={onClose}
-            className="p-1 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition-colors"
-          >
-            <X className="h-5 w-5" />
-          </button>
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={() => setIsMaximized(!isMaximized)}
+              className="p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition-colors cursor-pointer"
+              title={isMaximized ? "Restore Size (सामान्य आकार)" : "Maximize Screen (पूर्ण स्क्रीन / बड़ा करें)"}
+            >
+              {isMaximized ? <Minimize2 className="h-4.5 w-4.5" /> : <Maximize2 className="h-4.5 w-4.5" />}
+            </button>
+            <button
+              type="button"
+              onClick={onClose}
+              className="p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition-colors cursor-pointer"
+              title="Close"
+            >
+              <X className="h-5 w-5" />
+            </button>
+          </div>
         </div>
 
         {/* Body */}

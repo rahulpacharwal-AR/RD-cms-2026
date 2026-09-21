@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { PoliceCase, FIRDetails } from '../types';
 import { generateFIRNumber } from '../utils/policeHelpers';
-import { X, FileCheck2, ShieldCheck, CheckSquare, AlertCircle } from 'lucide-react';
+import { X, FileCheck2, ShieldCheck, CheckSquare, AlertCircle, Maximize2, Minimize2 } from 'lucide-react';
 
 interface FIRGenerationModalProps {
   isOpen: boolean;
@@ -18,11 +18,10 @@ export const FIRGenerationModal: React.FC<FIRGenerationModalProps> = ({
   onGenerateFIR,
   approvingShoName
 }) => {
-  if (!isOpen || !caseItem) return null;
-
-  const initialFirNumber = generateFIRNumber(caseItem.policeStation);
+  const initialFirNumber = generateFIRNumber(caseItem?.policeStation || 'PS Civil Lines, Karnal');
   const currentDate = new Date().toISOString().split('T')[0];
   const currentTime = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+  const [isMaximized, setIsMaximized] = useState(false);
 
   // Common BNS & Special Law Sections
   const availableSections = [
@@ -43,11 +42,11 @@ export const FIRGenerationModal: React.FC<FIRGenerationModalProps> = ({
     'NDPS Act 1985 Sec 20/21/22 - Psychotropic Substances'
   ];
 
-  const defaultSelectedSections = caseItem.crimeNature === 'CYBER_FRAUD'
+  const defaultSelectedSections = caseItem?.crimeNature === 'CYBER_FRAUD'
     ? ['BNS 318(4) - Cheating & Dishonestly Inducing Delivery', 'IT Act 2000 Sec 66D - Cheating by Personation using Computer Resource']
-    : caseItem.crimeNature === 'THEFT_BURGLARY'
+    : caseItem?.crimeNature === 'THEFT_BURGLARY'
     ? ['BNS 303(2) - Theft in Building/Tent/Vessel']
-    : caseItem.crimeNature === 'EXTORTION'
+    : caseItem?.crimeNature === 'EXTORTION'
     ? ['BNS 308(2) - Extortion by Putting in Fear of Death', 'Arms Act 1959 Sec 25/54/59 - Unlawful Possession of Firearm']
     : ['BNS 318(4) - Cheating & Dishonestly Inducing Delivery'];
 
@@ -55,8 +54,10 @@ export const FIRGenerationModal: React.FC<FIRGenerationModalProps> = ({
   const [selectedSections, setSelectedSections] = useState<string[]>(defaultSelectedSections);
   const [customSection, setCustomSection] = useState('');
   const [firSummary, setFirSummary] = useState(
-    `Upon preliminary enquiry by ${caseItem.currentIO.name || 'IO'}, cognizable offence is established. Case facts, complainant statement, site inspection, and seized evidences verified. Ordered for registration of formal FIR under relevant sections.`
+    `Upon preliminary enquiry by ${caseItem?.currentIO?.name || 'IO'}, cognizable offence is established. Case facts, complainant statement, site inspection, and seized evidences verified. Ordered for registration of formal FIR under relevant sections.`
   );
+
+  if (!isOpen || !caseItem) return null;
 
   const toggleSection = (sec: string) => {
     if (selectedSections.includes(sec)) {
@@ -97,8 +98,10 @@ export const FIRGenerationModal: React.FC<FIRGenerationModalProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/70 backdrop-blur-sm overflow-y-auto animate-in fade-in duration-150">
-      <div className="bg-white rounded-2xl shadow-2xl max-w-2xl w-full border border-slate-200 overflow-hidden my-6 max-h-[92vh] flex flex-col">
+    <div className={`fixed inset-0 z-50 flex items-center justify-center ${isMaximized ? 'p-0' : 'p-4'} bg-slate-950/70 backdrop-blur-sm overflow-y-auto animate-in fade-in duration-150`}>
+      <div className={`bg-white shadow-2xl border border-slate-200 overflow-hidden flex flex-col transition-all duration-200 ${
+        isMaximized ? 'w-full h-full max-w-none max-h-none rounded-none my-0' : 'max-w-2xl w-full rounded-2xl my-6 max-h-[92vh]'
+      }`}>
         
         {/* Header */}
         <div className="bg-[#0c1a30] text-white px-6 py-4 flex items-center justify-between border-b border-slate-700 shrink-0">
@@ -115,12 +118,24 @@ export const FIRGenerationModal: React.FC<FIRGenerationModalProps> = ({
               </p>
             </div>
           </div>
-          <button
-            onClick={onClose}
-            className="p-1 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition-colors"
-          >
-            <X className="h-5 w-5" />
-          </button>
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={() => setIsMaximized(!isMaximized)}
+              className="p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition-colors cursor-pointer"
+              title={isMaximized ? "Restore Size (सामान्य आकार)" : "Maximize Screen (पूर्ण स्क्रीन / बड़ा करें)"}
+            >
+              {isMaximized ? <Minimize2 className="h-4.5 w-4.5" /> : <Maximize2 className="h-4.5 w-4.5" />}
+            </button>
+            <button
+              type="button"
+              onClick={onClose}
+              className="p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition-colors cursor-pointer"
+              title="Close"
+            >
+              <X className="h-5 w-5" />
+            </button>
+          </div>
         </div>
 
         {/* Body */}

@@ -2,7 +2,7 @@ import React, { useState, useRef } from 'react';
 import { PoliceCase, CrimeCategory, PriorityLevel, AttachmentFile } from '../types';
 import { POLICE_STATIONS } from '../data/initialData';
 import { generateComplaintId } from '../utils/policeHelpers';
-import { X, ShieldAlert, User, MapPin, Calendar, FileText, Upload, Plus, Trash2, Camera, AlertCircle, FolderOpen, Image, Film, Music, Check } from 'lucide-react';
+import { X, ShieldAlert, User, MapPin, Calendar, FileText, Upload, Plus, Trash2, Camera, AlertCircle, FolderOpen, Image, Film, Music, Check, Maximize2, Minimize2 } from 'lucide-react';
 
 interface NewComplaintModalProps {
   isOpen: boolean;
@@ -19,12 +19,11 @@ export const NewComplaintModal: React.FC<NewComplaintModalProps> = ({
   receivingOfficerName,
   receivingOfficerRank
 }) => {
-  if (!isOpen) return null;
-
   // Form State
   const [stationName, setStationName] = useState('PS Civil Lines, Karnal');
   const [priority, setPriority] = useState<PriorityLevel>('HIGH');
   const [crimeNature, setCrimeNature] = useState<CrimeCategory>('CYBER_FRAUD');
+  const [isMaximized, setIsMaximized] = useState(false);
 
   // Complainant
   const [complainantName, setComplainantName] = useState('');
@@ -70,6 +69,8 @@ export const NewComplaintModal: React.FC<NewComplaintModalProps> = ({
   const [newAttTitle, setNewAttTitle] = useState('');
   const [newAttType, setNewAttType] = useState<'PHOTO' | 'VIDEO' | 'AUDIO' | 'DOCUMENT'>('PHOTO');
   const [newAttFileName, setNewAttFileName] = useState('');
+
+  if (!isOpen) return null;
 
   // Handle files selected from local device dialog or drag-and-drop
   const handleFilesPicked = (fileList: FileList | null) => {
@@ -226,8 +227,10 @@ export const NewComplaintModal: React.FC<NewComplaintModalProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/70 backdrop-blur-sm overflow-y-auto animate-in fade-in duration-150">
-      <div className="bg-white rounded-2xl shadow-2xl max-w-4xl w-full border border-slate-200 overflow-hidden my-8 max-h-[90vh] flex flex-col">
+    <div className={`fixed inset-0 z-50 flex items-center justify-center ${isMaximized ? 'p-0' : 'p-2 sm:p-4'} bg-slate-950/70 backdrop-blur-sm overflow-y-auto animate-in fade-in duration-150`}>
+      <div className={`bg-white shadow-2xl border border-slate-200 overflow-hidden flex flex-col transition-all duration-200 ${
+        isMaximized ? 'w-full h-full max-w-none max-h-none rounded-none my-0' : 'max-w-4xl w-full rounded-2xl my-4 sm:my-8 max-h-[90vh]'
+      }`}>
         
         {/* Header */}
         <div className="bg-[#0c1a30] text-white px-6 py-4 flex items-center justify-between border-b border-slate-700 shrink-0">
@@ -249,12 +252,24 @@ export const NewComplaintModal: React.FC<NewComplaintModalProps> = ({
               </p>
             </div>
           </div>
-          <button
-            onClick={onClose}
-            className="p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition-colors"
-          >
-            <X className="h-5 w-5" />
-          </button>
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={() => setIsMaximized(!isMaximized)}
+              className="p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition-colors cursor-pointer"
+              title={isMaximized ? "Restore Size (सामान्य आकार)" : "Maximize Screen (पूर्ण स्क्रीन / बड़ा करें)"}
+            >
+              {isMaximized ? <Minimize2 className="h-4.5 w-4.5" /> : <Maximize2 className="h-4.5 w-4.5" />}
+            </button>
+            <button
+              type="button"
+              onClick={onClose}
+              className="p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition-colors cursor-pointer"
+              title="Close"
+            >
+              <X className="h-5 w-5" />
+            </button>
+          </div>
         </div>
 
         {/* Form Body */}

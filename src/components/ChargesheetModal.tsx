@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { PoliceCase, ChargesheetRecord, UserRole } from '../types';
-import { X, FileText, CheckCircle2, RotateCcw, AlertTriangle, Scale, ShieldCheck } from 'lucide-react';
+import { X, FileText, CheckCircle2, RotateCcw, AlertTriangle, Scale, ShieldCheck, Maximize2, Minimize2 } from 'lucide-react';
 
 interface ChargesheetModalProps {
   isOpen: boolean;
@@ -19,19 +19,17 @@ export const ChargesheetModal: React.FC<ChargesheetModalProps> = ({
   currentOfficerName,
   onSaveChargesheet
 }) => {
-  if (!isOpen || !caseItem) return null;
-
-  const existingChallan = caseItem.chargesheet;
-  const initialSections = caseItem.firDetails?.applicableSections || ['BNS 303(2)'];
-  const accusedNames = caseItem.suspects.filter((s) => s.status === 'ARRESTED').map((s) => s.name);
-  const defaultAccused = accusedNames.length > 0 ? accusedNames : caseItem.suspects.map((s) => s.name);
+  const existingChallan = caseItem?.chargesheet;
+  const initialSections = caseItem?.firDetails?.applicableSections || ['BNS 303(2)'];
+  const accusedNames = (caseItem?.suspects || []).filter((s) => s.status === 'ARRESTED').map((s) => s.name);
+  const defaultAccused = accusedNames.length > 0 ? accusedNames : (caseItem?.suspects || []).map((s) => s.name);
 
   const [chargesheetNumber, setChargesheetNumber] = useState(
     existingChallan?.chargesheetNumber || `CHALLAN-${new Date().getFullYear()}-${Math.floor(100 + Math.random() * 900)}`
   );
   const [witnesses, setWitnesses] = useState(
     existingChallan?.listOfWitnesses.join('\n') ||
-      `1. ${caseItem.complainant.name} (Complainant / PW-1)\n2. ${caseItem.currentIO.name} (Investigating Officer / PW-2)\n3. HC Malkhana Incharge (Recovery / PW-3)`
+      `1. ${caseItem?.complainant?.name || 'Complainant'} (Complainant / PW-1)\n2. ${caseItem?.currentIO?.name || 'IO'} (Investigating Officer / PW-2)\n3. HC Malkhana Incharge (Recovery / PW-3)`
   );
   const [materialEvidences, setMaterialEvidences] = useState(
     existingChallan?.materialEvidences.join('\n') ||
@@ -43,7 +41,10 @@ export const ChargesheetModal: React.FC<ChargesheetModalProps> = ({
   const [shoRemarks, setShoRemarks] = useState(existingChallan?.shoRemarks || '');
   const [spStatus, setSpStatus] = useState(existingChallan?.spApprovalStatus || 'PENDING');
   const [spRemarks, setSpRemarks] = useState(existingChallan?.spRemarks || '');
+  const [isMaximized, setIsMaximized] = useState(false);
   const [revisionInstructions, setRevisionInstructions] = useState(existingChallan?.revisionInstructions || '');
+
+  if (!isOpen || !caseItem) return null;
 
   const handleSaveDraft = (e: React.FormEvent) => {
     e.preventDefault();
@@ -85,8 +86,10 @@ export const ChargesheetModal: React.FC<ChargesheetModalProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/70 backdrop-blur-sm overflow-y-auto animate-in fade-in duration-150">
-      <div className="bg-white rounded-2xl shadow-2xl max-w-2xl w-full border border-slate-200 overflow-hidden my-6 max-h-[92vh] flex flex-col">
+    <div className={`fixed inset-0 z-50 flex items-center justify-center ${isMaximized ? 'p-0' : 'p-4'} bg-slate-950/70 backdrop-blur-sm overflow-y-auto animate-in fade-in duration-150`}>
+      <div className={`bg-white shadow-2xl border border-slate-200 overflow-hidden flex flex-col transition-all duration-200 ${
+        isMaximized ? 'w-full h-full max-w-none max-h-none rounded-none my-0' : 'max-w-2xl w-full rounded-2xl my-6 max-h-[92vh]'
+      }`}>
         
         {/* Header */}
         <div className="bg-[#0c1a30] text-white px-6 py-4 flex items-center justify-between border-b border-slate-700 shrink-0">
@@ -103,12 +106,24 @@ export const ChargesheetModal: React.FC<ChargesheetModalProps> = ({
               </p>
             </div>
           </div>
-          <button
-            onClick={onClose}
-            className="p-1 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition-colors"
-          >
-            <X className="h-5 w-5" />
-          </button>
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={() => setIsMaximized(!isMaximized)}
+              className="p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition-colors cursor-pointer"
+              title={isMaximized ? "Restore Size (सामान्य आकार)" : "Maximize Screen (पूर्ण स्क्रीन / बड़ा करें)"}
+            >
+              {isMaximized ? <Minimize2 className="h-4.5 w-4.5" /> : <Maximize2 className="h-4.5 w-4.5" />}
+            </button>
+            <button
+              type="button"
+              onClick={onClose}
+              className="p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition-colors cursor-pointer"
+              title="Close"
+            >
+              <X className="h-5 w-5" />
+            </button>
+          </div>
         </div>
 
         {/* Body */}

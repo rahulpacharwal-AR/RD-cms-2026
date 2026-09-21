@@ -68,15 +68,28 @@ export interface AttachmentFile {
   notes?: string;
 }
 
+export interface StatementMediaAttachment {
+  id: string;
+  type: 'AUDIO' | 'VIDEO' | 'HANDWRITTEN' | 'PHOTO';
+  title: string;
+  dataUrl: string; // Base64 or Blob URL for playback / viewing
+  mimeType?: string;
+  durationSeconds?: number;
+  recordedAt: string;
+  fileSize?: string;
+}
+
 export interface WitnessStatement {
   id: string;
   personName: string;
   role: 'WITNESS' | 'COMPLAINANT' | 'SUSPECT' | 'INFORMER';
   dateRecorded: string;
   recordedByOfficer: string;
-  mode: 'TEXT_TRANSCRIPT' | 'AUDIO' | 'VIDEO' | 'HANDWRITTEN_MEMO';
+  mode: 'TEXT_TRANSCRIPT' | 'AUDIO' | 'VIDEO' | 'HANDWRITTEN_MEMO' | 'MULTI_MEDIA';
   statementText: string;
   recordingUrl?: string;
+  attachments?: StatementMediaAttachment[];
+  handwrittenDataUrl?: string;
   verified: boolean;
 }
 
@@ -124,6 +137,53 @@ export interface PreliminaryEnquiry {
   recommendation: 'RECOMMEND_FIR' | 'RECOMMEND_CLOSURE' | 'FURTHER_ENQUIRY_NEEDED';
   recommendationDate?: string;
   closureReason?: string;
+  ioFinalRemarks?: string | {
+    remarksNarrative?: string;
+    recommendedSections?: string;
+    isCognizableOffence?: boolean;
+    evidenceEvaluation?: string;
+  };
+  suggestedSections?: string;
+  submittedAt?: string;
+  submittedByOfficer?: string;
+  shoActionRequested?: 'PENDING_SHO_REVIEW' | 'SHO_ORDERED_FIR' | 'SHO_ASKED_FINAL_REPORT' | 'SHO_ORDERED_CLOSURE' | 'FINAL_REPORT_SUBMITTED';
+  shoInstructions?: string;
+  shoDemandNotes?: string;
+  enquiryCompletedDate?: string;
+  shoActionTimestamp?: string;
+  finalReportSubmittedByIO?: boolean;
+  finalReportForwardedAt?: string;
+  finalReportSummary?: string;
+  writtenFinalReport?: PoliceWrittenFinalReport;
+  finalReportDocketSummary?: {
+    evidenceCount: number;
+    statementCount: number;
+    suspectCount: number;
+    zimniCount: number;
+  } | string;
+}
+
+export interface PoliceWrittenFinalReport {
+  department: string;
+  citizenName: string;
+  citizenFatherName?: string;
+  citizenMobile: string;
+  citizenAddress: string;
+  complaintAllegations: string;
+  reportDate: string;
+  citizenSatisfaction: 'YES' | 'NO' | 'PENDING';
+  enquiryHeading: string;
+  noticeAndStudyNarrative: string;
+  previousComplaintsReference?: string;
+  respondentStatements: string;
+  attachedDocumentsReference: string;
+  complainantStatementNarrative: string;
+  ioFindingsAndAnalysis: string;
+  concludingRecommendation: string;
+  officerSignatureName: string;
+  officerSignatureRank: string;
+  officerStation: string;
+  officerDate: string;
 }
 
 export interface FIRDetails {
@@ -201,6 +261,14 @@ export interface CourtTrialRecord {
   certifiedCopyUrl?: string;
 }
 
+export interface IOAcceptanceRecord {
+  status: 'PENDING_ACCEPTANCE' | 'ACCEPTED';
+  assignedAt: string;
+  assignedBySHO: string;
+  acceptedAt?: string;
+  shoInstructions?: string;
+}
+
 export interface PoliceCase {
   id: string;
   complaintNumber: string;
@@ -231,6 +299,7 @@ export interface PoliceCase {
     email?: string;
     station: string;
   };
+  ioAcceptance?: IOAcceptanceRecord;
   ioTransferHistory: IOTransferHistory[];
   enquiryTimelineZimni: ZimniEntry[]; // Day 01, Day 02 mini diary during enquiry
   fullInvestigationZimni: ZimniEntry[]; // Full Parcha Zimni after FIR
@@ -271,4 +340,6 @@ export interface PoliceOfficer {
   phone: string;
   station: string;
   activeCasesCount: number;
+  jurisdictionDistricts?: string[]; // e.g. ['Karnal', 'Panipat'] or ['Faridabad', 'Gurugram']
+  jurisdictionLabel?: string;
 }

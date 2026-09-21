@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { PoliceCase, SuspectInfo } from '../types';
 import { calculateStatutoryDeadline } from '../utils/policeHelpers';
-import { X, Lock, ShieldAlert, Calendar, CheckCircle2, UserCheck } from 'lucide-react';
+import { X, Lock, ShieldAlert, Calendar, CheckCircle2, UserCheck, Maximize2, Minimize2 } from 'lucide-react';
 
 interface CustodyBailModalProps {
   isOpen: boolean;
@@ -16,9 +16,7 @@ export const CustodyBailModal: React.FC<CustodyBailModalProps> = ({
   caseItem,
   onUpdateSuspectCustody
 }) => {
-  if (!isOpen || !caseItem) return null;
-
-  const suspects = caseItem.suspects;
+  const suspects = caseItem?.suspects || [];
   const [selectedSuspectId, setSelectedSuspectId] = useState(suspects[0]?.id || '');
   const targetSuspect = suspects.find((s) => s.id === selectedSuspectId) || suspects[0];
 
@@ -27,6 +25,9 @@ export const CustodyBailModal: React.FC<CustodyBailModalProps> = ({
   const [custodyType, setCustodyType] = useState<SuspectInfo['custodyType']>(targetSuspect?.custodyType || 'JUDICIAL_CUSTODY');
   const [bailDetails, setBailDetails] = useState(targetSuspect?.bailDetails || '');
   const [statutoryDays, setStatutoryDays] = useState<60 | 90>(90);
+  const [isMaximized, setIsMaximized] = useState(false);
+
+  if (!isOpen || !caseItem) return null;
 
   const handleSuspectChange = (id: string) => {
     setSelectedSuspectId(id);
@@ -61,11 +62,13 @@ export const CustodyBailModal: React.FC<CustodyBailModalProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/70 backdrop-blur-sm animate-in fade-in duration-150">
-      <div className="bg-white rounded-2xl shadow-2xl max-w-lg w-full border border-slate-200 overflow-hidden">
+    <div className={`fixed inset-0 z-50 flex items-center justify-center ${isMaximized ? 'p-0' : 'p-4'} bg-slate-950/70 backdrop-blur-sm animate-in fade-in duration-150`}>
+      <div className={`bg-white shadow-2xl border border-slate-200 overflow-hidden flex flex-col transition-all duration-200 ${
+        isMaximized ? 'w-full h-full max-w-none max-h-none rounded-none my-0' : 'max-w-lg w-full rounded-2xl max-h-[92vh]'
+      }`}>
         
         {/* Header */}
-        <div className="bg-[#0c1a30] text-white px-6 py-4 flex items-center justify-between border-b border-slate-700">
+        <div className="bg-[#0c1a30] text-white px-6 py-4 flex items-center justify-between border-b border-slate-700 shrink-0">
           <div className="flex items-center gap-3">
             <div className="h-9 w-9 rounded-full bg-red-500/20 border border-red-400/40 flex items-center justify-center text-red-400">
               <Lock className="h-5 w-5" />
@@ -79,16 +82,28 @@ export const CustodyBailModal: React.FC<CustodyBailModalProps> = ({
               </p>
             </div>
           </div>
-          <button
-            onClick={onClose}
-            className="p-1 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition-colors"
-          >
-            <X className="h-5 w-5" />
-          </button>
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={() => setIsMaximized(!isMaximized)}
+              className="p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition-colors cursor-pointer"
+              title={isMaximized ? "Restore Size (सामान्य आकार)" : "Maximize Screen (पूर्ण स्क्रीन / बड़ा करें)"}
+            >
+              {isMaximized ? <Minimize2 className="h-4.5 w-4.5" /> : <Maximize2 className="h-4.5 w-4.5" />}
+            </button>
+            <button
+              type="button"
+              onClick={onClose}
+              className="p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition-colors cursor-pointer"
+              title="Close"
+            >
+              <X className="h-5 w-5" />
+            </button>
+          </div>
         </div>
 
         {/* Body */}
-        <form onSubmit={handleSubmit} className="p-6 space-y-4 bg-slate-50/50">
+        <form onSubmit={handleSubmit} className="p-6 space-y-4 bg-slate-50/50 overflow-y-auto flex-1">
           
           {suspects.length === 0 ? (
             <div className="p-4 bg-amber-50 border border-amber-200 rounded-lg text-xs text-amber-800">

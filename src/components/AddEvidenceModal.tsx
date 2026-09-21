@@ -1,6 +1,6 @@
 import React, { useState, useRef } from 'react';
 import { PoliceCase, AttachmentFile } from '../types';
-import { X, Upload, Camera, MapPin, Film, Mic, FileText, CheckCircle2, FolderOpen, Image, Music, Plus, Check } from 'lucide-react';
+import { X, Upload, Camera, MapPin, Film, Mic, FileText, CheckCircle2, FolderOpen, Image, Music, Plus, Check, Maximize2, Minimize2 } from 'lucide-react';
 
 interface AddEvidenceModalProps {
   isOpen: boolean;
@@ -17,10 +17,9 @@ export const AddEvidenceModal: React.FC<AddEvidenceModalProps> = ({
   onAddEvidence,
   currentOfficerName
 }) => {
-  if (!isOpen || !caseItem) return null;
-
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [isDragOver, setIsDragOver] = useState(false);
+  const [isMaximized, setIsMaximized] = useState(false);
 
   const [title, setTitle] = useState('');
   const [fileType, setFileType] = useState<AttachmentFile['fileType']>('PHOTO');
@@ -28,10 +27,12 @@ export const AddEvidenceModal: React.FC<AddEvidenceModalProps> = ({
   const [fileSize, setFileSize] = useState('1.5 MB');
   const [fileUrl, setFileUrl] = useState<string | undefined>(undefined);
   const [includeGeoTag, setIncludeGeoTag] = useState(true);
-  const [locationName, setLocationName] = useState(caseItem.incidentLocation || 'Scene of Crime');
+  const [locationName, setLocationName] = useState(caseItem?.incidentLocation || 'Scene of Crime');
   const [latitude, setLatitude] = useState(29.6857);
   const [longitude, setLongitude] = useState(76.9905);
   const [notes, setNotes] = useState('Collected under spot panchnama in presence of independent witnesses.');
+
+  if (!isOpen || !caseItem) return null;
 
   const handleFileSelected = (file: File | undefined) => {
     if (!file) return;
@@ -90,8 +91,10 @@ export const AddEvidenceModal: React.FC<AddEvidenceModalProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/70 backdrop-blur-sm animate-in fade-in duration-150">
-      <div className="bg-white rounded-2xl shadow-2xl max-w-lg w-full border border-slate-200 overflow-hidden max-h-[92vh] flex flex-col">
+    <div className={`fixed inset-0 z-50 flex items-center justify-center ${isMaximized ? 'p-0' : 'p-2 sm:p-4'} bg-slate-950/70 backdrop-blur-sm animate-in fade-in duration-150`}>
+      <div className={`bg-white shadow-2xl border border-slate-200 overflow-hidden flex flex-col transition-all duration-200 ${
+        isMaximized ? 'w-full h-full max-w-none max-h-none rounded-none my-0' : 'max-w-lg w-full rounded-2xl max-h-[92vh]'
+      }`}>
         
         {/* Header */}
         <div className="bg-[#0c1a30] text-white px-6 py-4 flex items-center justify-between border-b border-slate-700 shrink-0">
@@ -108,12 +111,24 @@ export const AddEvidenceModal: React.FC<AddEvidenceModalProps> = ({
               </p>
             </div>
           </div>
-          <button
-            onClick={onClose}
-            className="p-1 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition-colors"
-          >
-            <X className="h-5 w-5" />
-          </button>
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={() => setIsMaximized(!isMaximized)}
+              className="p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition-colors cursor-pointer"
+              title={isMaximized ? "Restore Size (सामान्य आकार)" : "Maximize Screen (पूर्ण स्क्रीन / बड़ा करें)"}
+            >
+              {isMaximized ? <Minimize2 className="h-4.5 w-4.5" /> : <Maximize2 className="h-4.5 w-4.5" />}
+            </button>
+            <button
+              type="button"
+              onClick={onClose}
+              className="p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition-colors cursor-pointer"
+              title="Close"
+            >
+              <X className="h-5 w-5" />
+            </button>
+          </div>
         </div>
 
         {/* Body */}
